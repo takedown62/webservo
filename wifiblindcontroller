@@ -1,0 +1,563 @@
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <Servo.h>
+
+#ifndef STASSID
+#define STASSID "yourwifinamehere"
+#define STAPSK  "yourpasswordhere"
+#endif
+
+const char* ssid = STASSID;
+const char* password = STAPSK;
+
+MDNSResponder mdns;
+ESP8266WebServer server(80);
+
+int servoPin = 0; //Servo on GPIO0 or NODEMCU pin D3
+const int buttonPin1 = 12; //manual button on GPIO12 or NODEMCU pin D6
+const int buttonPin2 = 13; //close ndoemcu pin D7
+const int buttonPin3 = 14;//open nodemcu pin D5
+int buttonState1 = 0;
+int buttonState2 = 0;
+int buttonState3 = 0;
+
+int direction = 0;
+int setting = 0; //Startup with blinds closed
+int position = 360;
+Servo servoA;
+
+String webPage = "";
+
+void setup(void) {
+  
+webPage += "<h1>WEB SERVO ONLINE</h1><p>Blind Controller</p>";  
+webPage += "<a href=\"0\"><button>0</button></a>  <a href=\"110\"><button>110</button></a><br>";
+webPage += "<a href=\"10\"><button>10</button></a>  <a href=\"120\"><button>120</button></a><br>";
+webPage += "<a href=\"20\"><button>20</button></a><br>";
+webPage += "<a href=\"30\"><button>30</button></a><br>";
+webPage += "<a href=\"40\"><button>40</button></a><br>";
+webPage += "<a href=\"50\"><button>50</button></a><br>";
+webPage += "<a href=\"60\"><button>60</button></a><br>";
+webPage += "<a href=\"70\"><button>70</button></a><br>";
+webPage += "<a href=\"80\"><button>80</button></a><br>";
+webPage += "<a href=\"90\"><button>90</button></a><br>";
+webPage += "<a href=\"100\"><button>100</button></a><br>"; 
+webPage += "<a href=\"130\"><button>130</button></a><br>";
+webPage += "<a href=\"140\"><button>140</button></a><br>";
+webPage += "<a href=\"150\"><button>150</button></a><br>";
+webPage += "<a href=\"160\"><button>160</button></a><br>";
+webPage += "<a href=\"170\"><button>170</button></a><br>";
+webPage += "<a href=\"180\"><button>180</button></a><br>";
+webPage += "<a href=\"190\"><button>190</button></a><br>";
+webPage += "<a href=\"200\"><button>200</button></a><br>";
+webPage += "<a href=\"210\"><button>210</button></a><br>";
+webPage += "<a href=\"220\"><button>220</button></a><br>";
+webPage += "<a href=\"230\"><button>230</button></a><br>";
+webPage += "<a href=\"240\"><button>240</button></a><br>";
+webPage += "<a href=\"250\"><button>250</button></a><br>";
+webPage += "<a href=\"260\"><button>260</button></a><br>";
+webPage += "<a href=\"270\"><button>270</button></a><br>";
+webPage += "<a href=\"280\"><button>280</button></a><br>";
+webPage += "<a href=\"290\"><button>290</button></a><br>";
+webPage += "<a href=\"300\"><button>300</button></a><br>";
+webPage += "<a href=\"310\"><button>310</button></a><br>";
+webPage += "<a href=\"320\"><button>320</button></a><br>";
+webPage += "<a href=\"330\"><button>330</button></a><br>";
+webPage += "<a href=\"340\"><button>340</button></a><br>";
+webPage += "<a href=\"350\"><button>350</button></a><br>";
+webPage += "<a href=\"360\"><button>360</button></a><br>";
+
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.println("");
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  if (MDNS.begin("esp8266")) {
+    Serial.println("MDNS responder started");
+  }
+
+server.on("/", []() { server.send(200, "text/html", webPage); });
+server.on("/400", []() { server.send(200, "text/html", webPage);  setting = 246; });
+server.on("/399", []() { server.send(200, "text/html", webPage);  setting = 245; });
+server.on("/398", []() { server.send(200, "text/html", webPage);  setting = 245; });
+server.on("/397", []() { server.send(200, "text/html", webPage);  setting = 245; });
+server.on("/396", []() { server.send(200, "text/html", webPage);  setting = 244; });
+server.on("/395", []() { server.send(200, "text/html", webPage);  setting = 244; });
+server.on("/394", []() { server.send(200, "text/html", webPage);  setting = 244; });
+server.on("/393", []() { server.send(200, "text/html", webPage);  setting = 243; });
+server.on("/392", []() { server.send(200, "text/html", webPage);  setting = 243; });
+server.on("/391", []() { server.send(200, "text/html", webPage);  setting = 243; });
+server.on("/390", []() { server.send(200, "text/html", webPage);  setting = 242; });
+server.on("/389", []() { server.send(200, "text/html", webPage);  setting = 242; });
+server.on("/388", []() { server.send(200, "text/html", webPage);  setting = 242; });
+server.on("/387", []() { server.send(200, "text/html", webPage);  setting = 241; });
+server.on("/386", []() { server.send(200, "text/html", webPage);  setting = 241; });
+server.on("/385", []() { server.send(200, "text/html", webPage);  setting = 241; });
+server.on("/384", []() { server.send(200, "text/html", webPage);  setting = 240; });
+server.on("/383", []() { server.send(200, "text/html", webPage);  setting = 240; });
+server.on("/382", []() { server.send(200, "text/html", webPage);  setting = 240; });
+server.on("/381", []() { server.send(200, "text/html", webPage);  setting = 239; });
+server.on("/380", []() { server.send(200, "text/html", webPage);  setting = 239; });
+server.on("/379", []() { server.send(200, "text/html", webPage);  setting = 239; });
+server.on("/378", []() { server.send(200, "text/html", webPage);  setting = 238; });
+server.on("/377", []() { server.send(200, "text/html", webPage);  setting = 238; });
+server.on("/376", []() { server.send(200, "text/html", webPage);  setting = 238; });
+server.on("/375", []() { server.send(200, "text/html", webPage);  setting = 237; });
+server.on("/374", []() { server.send(200, "text/html", webPage);  setting = 237; });
+server.on("/373", []() { server.send(200, "text/html", webPage);  setting = 237; });
+server.on("/372", []() { server.send(200, "text/html", webPage);  setting = 236; });
+server.on("/371", []() { server.send(200, "text/html", webPage);  setting = 236; });
+server.on("/370", []() { server.send(200, "text/html", webPage);  setting = 236; });
+server.on("/369", []() { server.send(200, "text/html", webPage);  setting = 235; });
+server.on("/368", []() { server.send(200, "text/html", webPage);  setting = 235; });
+server.on("/367", []() { server.send(200, "text/html", webPage);  setting = 235; });
+server.on("/366", []() { server.send(200, "text/html", webPage);  setting = 234; });
+server.on("/365", []() { server.send(200, "text/html", webPage);  setting = 234; });
+server.on("/364", []() { server.send(200, "text/html", webPage);  setting = 234; });
+server.on("/363", []() { server.send(200, "text/html", webPage);  setting = 233; });
+server.on("/362", []() { server.send(200, "text/html", webPage);  setting = 232; });
+server.on("/361", []() { server.send(200, "text/html", webPage);  setting = 232; });
+server.on("/360", []() { server.send(200, "text/html", webPage);  setting = 232; });
+server.on("/359", []() { server.send(200, "text/html", webPage);  setting = 231; });
+server.on("/358", []() { server.send(200, "text/html", webPage);  setting = 231; });
+server.on("/357", []() { server.send(200, "text/html", webPage);  setting = 231; });
+server.on("/356", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/355", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/354", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/353", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/352", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/351", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/350", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/349", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/348", []() { server.send(200, "text/html", webPage);  setting = 230; });
+server.on("/347", []() { server.send(200, "text/html", webPage);  setting = 229; });
+server.on("/346", []() { server.send(200, "text/html", webPage);  setting = 229; });
+server.on("/345", []() { server.send(200, "text/html", webPage);  setting = 229; });
+server.on("/344", []() { server.send(200, "text/html", webPage);  setting = 229; });
+server.on("/343", []() { server.send(200, "text/html", webPage);  setting = 229; });
+server.on("/342", []() { server.send(200, "text/html", webPage);  setting = 226; });
+server.on("/341", []() { server.send(200, "text/html", webPage);  setting = 225; });
+server.on("/340", []() { server.send(200, "text/html", webPage);  setting = 225; });
+server.on("/339", []() { server.send(200, "text/html", webPage);  setting = 225; });
+server.on("/338", []() { server.send(200, "text/html", webPage);  setting = 224; });
+server.on("/337", []() { server.send(200, "text/html", webPage);  setting = 224; });
+server.on("/336", []() { server.send(200, "text/html", webPage);  setting = 224; });
+server.on("/335", []() { server.send(200, "text/html", webPage);  setting = 223; });
+server.on("/334", []() { server.send(200, "text/html", webPage);  setting = 223; });
+server.on("/333", []() { server.send(200, "text/html", webPage);  setting = 223; });
+server.on("/332", []() { server.send(200, "text/html", webPage);  setting = 222; });
+server.on("/331", []() { server.send(200, "text/html", webPage);  setting = 222; });  
+server.on("/330", []() { server.send(200, "text/html", webPage);  setting = 222; });
+server.on("/329", []() { server.send(200, "text/html", webPage);  setting = 222; });
+server.on("/328", []() { server.send(200, "text/html", webPage);  setting = 222; });
+server.on("/327", []() { server.send(200, "text/html", webPage);  setting = 222; });
+server.on("/326", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/325", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/324", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/323", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/322", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/321", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/320", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/319", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/318", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/317", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/316", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/315", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/314", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/313", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/312", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/311", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/310", []() { server.send(200, "text/html", webPage);  setting = 221; });
+server.on("/309", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/308", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/307", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/306", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/305", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/304", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/303", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/302", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/301", []() { server.send(200, "text/html", webPage);  setting = 220; });
+server.on("/300", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/299", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/298", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/297", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/296", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/295", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/294", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/293", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/292", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/291", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/290", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/289", []() { server.send(200, "text/html", webPage);  setting = 219; });
+server.on("/288", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/287", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/286", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/285", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/284", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/283", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/282", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/281", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/280", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/279", []() { server.send(200, "text/html", webPage);  setting = 218; });
+server.on("/278", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/277", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/276", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/275", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/274", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/273", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/272", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/271", []() { server.send(200, "text/html", webPage);  setting = 217; });
+server.on("/270", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/269", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/268", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/267", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/266", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/265", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/264", []() { server.send(200, "text/html", webPage);  setting = 216; });
+server.on("/263", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/262", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/261", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/260", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/259", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/258", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/257", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/256", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/255", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/254", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/253", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/252", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/251", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/250", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/249", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/248", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/247", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/246", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/245", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/244", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/243", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/242", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/241", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/240", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/239", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/238", []() { server.send(200, "text/html", webPage);  setting = 215; });
+server.on("/237", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/236", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/235", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/234", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/233", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/232", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/231", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/230", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/229", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/228", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/227", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/226", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/225", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/224", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/223", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/222", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/221", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/220", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/219", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/218", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/217", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/216", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/215", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/214", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/213", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/212", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/211", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/210", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/209", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/208", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/207", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/206", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/205", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/204", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/203", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/202", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/201", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/200", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/199", []() { server.send(200, "text/html", webPage);  setting = 214; });
+server.on("/198", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/197", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/196", []() { server.send(200, "text/html", webPage);  setting = 213; });
+server.on("/195", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/194", []() { server.send(200, "text/html", webPage);  setting = 212; });
+server.on("/193", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/192", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/191", []() { server.send(200, "text/html", webPage);  setting = 211; });
+server.on("/190", []() { server.send(200, "text/html", webPage);  setting = 210; });
+server.on("/189", []() { server.send(200, "text/html", webPage);  setting = 210; });
+server.on("/188", []() { server.send(200, "text/html", webPage);  setting = 210; });
+server.on("/187", []() { server.send(200, "text/html", webPage);  setting = 209; });
+server.on("/186", []() { server.send(200, "text/html", webPage);  setting = 209; });
+server.on("/185", []() { server.send(200, "text/html", webPage);  setting = 209; });
+server.on("/184", []() { server.send(200, "text/html", webPage);  setting = 208; });
+server.on("/183", []() { server.send(200, "text/html", webPage);  setting = 208; });
+server.on("/182", []() { server.send(200, "text/html", webPage);  setting = 208; });
+server.on("/181", []() { server.send(200, "text/html", webPage);  setting = 207; });
+server.on("/180", []() { server.send(200, "text/html", webPage);  setting = 207; });
+server.on("/179", []() { server.send(200, "text/html", webPage);  setting = 207; });
+server.on("/178", []() { server.send(200, "text/html", webPage);  setting = 206; });
+server.on("/177", []() { server.send(200, "text/html", webPage);  setting = 206; });
+server.on("/176", []() { server.send(200, "text/html", webPage);  setting = 206; });
+server.on("/175", []() { server.send(200, "text/html", webPage);  setting = 205; });
+server.on("/174", []() { server.send(200, "text/html", webPage);  setting = 205; });
+server.on("/173", []() { server.send(200, "text/html", webPage);  setting = 205; });
+server.on("/172", []() { server.send(200, "text/html", webPage);  setting = 204; });
+server.on("/171", []() { server.send(200, "text/html", webPage);  setting = 204; });
+server.on("/170", []() { server.send(200, "text/html", webPage);  setting = 204; });
+server.on("/169", []() { server.send(200, "text/html", webPage);  setting = 203; });
+server.on("/168", []() { server.send(200, "text/html", webPage);  setting = 203; });
+server.on("/167", []() { server.send(200, "text/html", webPage);  setting = 203; });
+server.on("/166", []() { server.send(200, "text/html", webPage);  setting = 202; });
+server.on("/165", []() { server.send(200, "text/html", webPage);  setting = 202; });
+server.on("/164", []() { server.send(200, "text/html", webPage);  setting = 202; });
+server.on("/163", []() { server.send(200, "text/html", webPage);  setting = 201; });
+server.on("/162", []() { server.send(200, "text/html", webPage);  setting = 201; });
+server.on("/161", []() { server.send(200, "text/html", webPage);  setting = 201; });
+server.on("/160", []() { server.send(200, "text/html", webPage);  setting = 200; });
+server.on("/159", []() { server.send(200, "text/html", webPage);  setting = 200; });
+server.on("/158", []() { server.send(200, "text/html", webPage);  setting = 200; });
+server.on("/157", []() { server.send(200, "text/html", webPage);  setting = 199; });
+server.on("/156", []() { server.send(200, "text/html", webPage);  setting = 199; });
+server.on("/155", []() { server.send(200, "text/html", webPage);  setting = 199; });
+server.on("/154", []() { server.send(200, "text/html", webPage);  setting = 198; });
+server.on("/153", []() { server.send(200, "text/html", webPage);  setting = 198; });
+server.on("/152", []() { server.send(200, "text/html", webPage);  setting = 198; });
+server.on("/151", []() { server.send(200, "text/html", webPage);  setting = 197; });
+server.on("/150", []() { server.send(200, "text/html", webPage);  setting = 197; });
+server.on("/149", []() { server.send(200, "text/html", webPage);  setting = 197; });
+server.on("/148", []() { server.send(200, "text/html", webPage);  setting = 196; });
+server.on("/147", []() { server.send(200, "text/html", webPage);  setting = 196; });
+server.on("/146", []() { server.send(200, "text/html", webPage);  setting = 196; });
+server.on("/145", []() { server.send(200, "text/html", webPage);  setting = 195; });
+server.on("/144", []() { server.send(200, "text/html", webPage);  setting = 195; });
+server.on("/143", []() { server.send(200, "text/html", webPage);  setting = 195; });
+server.on("/142", []() { server.send(200, "text/html", webPage);  setting = 194; });
+server.on("/141", []() { server.send(200, "text/html", webPage);  setting = 194; });
+server.on("/140", []() { server.send(200, "text/html", webPage);  setting = 194; });
+server.on("/139", []() { server.send(200, "text/html", webPage);  setting = 193; });
+server.on("/138", []() { server.send(200, "text/html", webPage);  setting = 193; });
+server.on("/137", []() { server.send(200, "text/html", webPage);  setting = 193; });
+server.on("/136", []() { server.send(200, "text/html", webPage);  setting = 192; });
+server.on("/135", []() { server.send(200, "text/html", webPage);  setting = 192; });
+server.on("/134", []() { server.send(200, "text/html", webPage);  setting = 192; });
+server.on("/133", []() { server.send(200, "text/html", webPage);  setting = 191; });
+server.on("/132", []() { server.send(200, "text/html", webPage);  setting = 191; });
+server.on("/131", []() { server.send(200, "text/html", webPage);  setting = 191; });
+server.on("/130", []() { server.send(200, "text/html", webPage);  setting = 190; });
+server.on("/129", []() { server.send(200, "text/html", webPage);  setting = 190; });
+server.on("/128", []() { server.send(200, "text/html", webPage);  setting = 190; });
+server.on("/127", []() { server.send(200, "text/html", webPage);  setting = 189; });
+server.on("/126", []() { server.send(200, "text/html", webPage);  setting = 189; });
+server.on("/125", []() { server.send(200, "text/html", webPage);  setting = 189; });
+server.on("/124", []() { server.send(200, "text/html", webPage);  setting = 188; });
+server.on("/123", []() { server.send(200, "text/html", webPage);  setting = 188; });
+server.on("/122", []() { server.send(200, "text/html", webPage);  setting = 188; });
+server.on("/121", []() { server.send(200, "text/html", webPage);  setting = 187; });
+server.on("/120", []() { server.send(200, "text/html", webPage);  setting = 187; });
+server.on("/119", []() { server.send(200, "text/html", webPage);  setting = 187; });
+server.on("/118", []() { server.send(200, "text/html", webPage);  setting = 186; });
+server.on("/117", []() { server.send(200, "text/html", webPage);  setting = 186; });
+server.on("/116", []() { server.send(200, "text/html", webPage);  setting = 186; });
+server.on("/115", []() { server.send(200, "text/html", webPage);  setting = 185; });
+server.on("/114", []() { server.send(200, "text/html", webPage);  setting = 185; });
+server.on("/113", []() { server.send(200, "text/html", webPage);  setting = 185; });
+server.on("/112", []() { server.send(200, "text/html", webPage);  setting = 184; });
+server.on("/111", []() { server.send(200, "text/html", webPage);  setting = 184; });
+server.on("/110", []() { server.send(200, "text/html", webPage);  setting = 184; });
+server.on("/109", []() { server.send(200, "text/html", webPage);  setting = 183; });
+server.on("/108", []() { server.send(200, "text/html", webPage);  setting = 183; });
+server.on("/107", []() { server.send(200, "text/html", webPage);  setting = 183; });
+server.on("/106", []() { server.send(200, "text/html", webPage);  setting = 182; });
+server.on("/105", []() { server.send(200, "text/html", webPage);  setting = 182; });
+server.on("/104", []() { server.send(200, "text/html", webPage);  setting = 182; });
+server.on("/103", []() { server.send(200, "text/html", webPage);  setting = 181; });
+server.on("/102", []() { server.send(200, "text/html", webPage);  setting = 181; });
+server.on("/101", []() { server.send(200, "text/html", webPage);  setting = 181; });
+server.on("/100", []() { server.send(200, "text/html", webPage);  setting = 180; });
+server.on("/99",  []() { server.send(200, "text/html", webPage);  setting = 180; });
+server.on("/98",  []() { server.send(200, "text/html", webPage);  setting = 180; });
+server.on("/97",  []() { server.send(200, "text/html", webPage);  setting = 171; });
+server.on("/96",  []() { server.send(200, "text/html", webPage);  setting = 171; });
+server.on("/95",  []() { server.send(200, "text/html", webPage);  setting = 171; });
+server.on("/94",  []() { server.send(200, "text/html", webPage);  setting = 171; });
+server.on("/93",  []() { server.send(200, "text/html", webPage);  setting = 171; });
+server.on("/92",  []() { server.send(200, "text/html", webPage);  setting = 162; });
+server.on("/91",  []() { server.send(200, "text/html", webPage);  setting = 162; });
+server.on("/90",  []() { server.send(200, "text/html", webPage);  setting = 162; });
+server.on("/89",  []() { server.send(200, "text/html", webPage);  setting = 162; });
+server.on("/88",  []() { server.send(200, "text/html", webPage);  setting = 162; });
+server.on("/87",  []() { server.send(200, "text/html", webPage);  setting = 153; });
+server.on("/86",  []() { server.send(200, "text/html", webPage);  setting = 153; });
+server.on("/85",  []() { server.send(200, "text/html", webPage);  setting = 153; });
+server.on("/84",  []() { server.send(200, "text/html", webPage);  setting = 153; });
+server.on("/83",  []() { server.send(200, "text/html", webPage);  setting = 153; });
+server.on("/82",  []() { server.send(200, "text/html", webPage);  setting = 144; });
+server.on("/81",  []() { server.send(200, "text/html", webPage);  setting = 144; });
+server.on("/80",  []() { server.send(200, "text/html", webPage);  setting = 144; });
+server.on("/79",  []() { server.send(200, "text/html", webPage);  setting = 144; });
+server.on("/78",  []() { server.send(200, "text/html", webPage);  setting = 144; });
+server.on("/77",  []() { server.send(200, "text/html", webPage);  setting = 135; });
+server.on("/76",  []() { server.send(200, "text/html", webPage);  setting = 135; });
+server.on("/75",  []() { server.send(200, "text/html", webPage);  setting = 135; });
+server.on("/74",  []() { server.send(200, "text/html", webPage);  setting = 135; });
+server.on("/73",  []() { server.send(200, "text/html", webPage);  setting = 135; });
+server.on("/72",  []() { server.send(200, "text/html", webPage);  setting = 126; });
+server.on("/71",  []() { server.send(200, "text/html", webPage);  setting = 126; });
+server.on("/70",  []() { server.send(200, "text/html", webPage);  setting = 126; });
+server.on("/69", []() { server.send(200, "text/html", webPage);  setting = 126; });
+server.on("/68", []() { server.send(200, "text/html", webPage);  setting = 126; });
+server.on("/67", []() { server.send(200, "text/html", webPage);  setting = 117; });
+server.on("/66", []() { server.send(200, "text/html", webPage);  setting = 117; });
+server.on("/65", []() { server.send(200, "text/html", webPage);  setting = 117; });
+server.on("/64", []() { server.send(200, "text/html", webPage);  setting = 117; });
+server.on("/63", []() { server.send(200, "text/html", webPage);  setting = 117; });
+server.on("/62", []() { server.send(200, "text/html", webPage);  setting = 108; });
+server.on("/61", []() { server.send(200, "text/html", webPage);  setting = 108; });
+server.on("/60", []() { server.send(200, "text/html", webPage);  setting = 108; });
+server.on("/59", []() { server.send(200, "text/html", webPage);  setting = 108; });
+server.on("/58", []() { server.send(200, "text/html", webPage);  setting = 108; });
+server.on("/57", []() { server.send(200, "text/html", webPage);  setting = 99; });
+server.on("/56", []() { server.send(200, "text/html", webPage);  setting = 99; });
+server.on("/55", []() { server.send(200, "text/html", webPage);  setting = 99; });
+server.on("/54", []() { server.send(200, "text/html", webPage);  setting = 99; });
+server.on("/53", []() { server.send(200, "text/html", webPage);  setting = 99; });
+server.on("/52", []() { server.send(200, "text/html", webPage);  setting = 90; });
+server.on("/51", []() { server.send(200, "text/html", webPage);  setting = 90; });
+server.on("/50", []() { server.send(200, "text/html", webPage);  setting = 90; });
+server.on("/49", []() { server.send(200, "text/html", webPage);  setting = 90; });
+server.on("/48", []() { server.send(200, "text/html", webPage);  setting = 90; });
+server.on("/47", []() { server.send(200, "text/html", webPage);  setting = 81; });
+server.on("/46", []() { server.send(200, "text/html", webPage);  setting = 81; });
+server.on("/45", []() { server.send(200, "text/html", webPage);  setting = 81; });
+server.on("/44", []() { server.send(200, "text/html", webPage);  setting = 81; });
+server.on("/43", []() { server.send(200, "text/html", webPage);  setting = 81; });
+server.on("/42", []() { server.send(200, "text/html", webPage);  setting = 72; });
+server.on("/41", []() { server.send(200, "text/html", webPage);  setting = 72; });
+server.on("/40", []() { server.send(200, "text/html", webPage);  setting = 72; });
+server.on("/39", []() { server.send(200, "text/html", webPage);  setting = 72; });
+server.on("/38", []() { server.send(200, "text/html", webPage);  setting = 72; });
+server.on("/37", []() { server.send(200, "text/html", webPage);  setting = 63; });
+server.on("/36", []() { server.send(200, "text/html", webPage);  setting = 63; });
+server.on("/35", []() { server.send(200, "text/html", webPage);  setting = 63; });
+server.on("/34", []() { server.send(200, "text/html", webPage);  setting = 63; });
+server.on("/33", []() { server.send(200, "text/html", webPage);  setting = 63; });
+server.on("/32", []() { server.send(200, "text/html", webPage);  setting = 54; });
+server.on("/31", []() { server.send(200, "text/html", webPage);  setting = 54; });
+server.on("/30", []() { server.send(200, "text/html", webPage);  setting = 54; });
+server.on("/29", []() { server.send(200, "text/html", webPage);  setting = 54; });
+server.on("/28", []() { server.send(200, "text/html", webPage);  setting = 54; });
+server.on("/27", []() { server.send(200, "text/html", webPage);  setting = 45; });
+server.on("/26", []() { server.send(200, "text/html", webPage);  setting = 45; });
+server.on("/25", []() { server.send(200, "text/html", webPage);  setting = 45; });
+server.on("/24", []() { server.send(200, "text/html", webPage);  setting = 45; });
+server.on("/23", []() { server.send(200, "text/html", webPage);  setting = 45; });
+server.on("/22", []() { server.send(200, "text/html", webPage);  setting = 36; });
+server.on("/21", []() { server.send(200, "text/html", webPage);  setting = 36; });
+server.on("/20", []() { server.send(200, "text/html", webPage);  setting = 36; });
+server.on("/19", []() { server.send(200, "text/html", webPage);  setting = 36; });
+server.on("/18", []() { server.send(200, "text/html", webPage);  setting = 36; });
+server.on("/17", []() { server.send(200, "text/html", webPage);  setting = 27; });
+server.on("/16", []() { server.send(200, "text/html", webPage);  setting = 27; });
+server.on("/15", []() { server.send(200, "text/html", webPage);  setting = 27; });
+server.on("/14", []() { server.send(200, "text/html", webPage);  setting = 27; });
+server.on("/13", []() { server.send(200, "text/html", webPage);  setting = 27; });
+server.on("/12", []() { server.send(200, "text/html", webPage);  setting = 18; });
+server.on("/11", []() { server.send(200, "text/html", webPage);  setting = 18; });
+server.on("/10", []() { server.send(200, "text/html", webPage);  setting = 18; });  
+server.on("/9", []() { server.send(200, "text/html", webPage);   setting = 18; });
+server.on("/8", []() { server.send(200, "text/html", webPage);   setting = 18; });
+server.on("/7", []() { server.send(200, "text/html", webPage);   setting = 9; });
+server.on("/6", []() { server.send(200, "text/html", webPage);   setting = 9; });
+server.on("/5", []() { server.send(200, "text/html", webPage);   setting = 9; });
+server.on("/4", []() { server.send(200, "text/html", webPage);   setting = 9; });
+server.on("/3", []() { server.send(200, "text/html", webPage);   setting = 9; });
+server.on("/2", []() { server.send(200, "text/html", webPage);   setting = 0; });
+server.on("/1", []() { server.send(200, "text/html", webPage);   setting = 0; });
+server.on("/0", []() { server.send(200, "text/html", webPage);   setting = 0; });
+  server.begin();
+  Serial.println("HTTP server started");
+}
+
+void loop(void) {
+
+   
+buttonState1 = digitalRead(buttonPin1);
+buttonState2 = digitalRead(buttonPin2);
+buttonState3 = digitalRead(buttonPin3);
+
+
+
+if(buttonState1 == LOW && setting <= 360 && direction == 0){
+  setting++;
+  delay(0);
+  if(setting == 360){
+    direction = 1;
+    }
+  }
+  
+if(buttonState2 == LOW && setting >= 0 && direction == 1){
+  setting--;
+  delay(0);
+  if(setting == 0){
+    direction = 0;
+    }
+  }
+  if(buttonState3 == LOW && setting <= 360 && direction == 0){
+  setting++;
+  delay(0);
+  if(setting == 360){
+    direction = 1;
+    }
+  }
+  
+if(buttonState3 == LOW && setting >= 0 && direction == 1){
+  setting--;
+  delay(0);
+  if(setting == 0){
+    direction = 0;
+    }
+  }
+
+if(position < setting){
+   servoA.attach(servoPin);
+   servoA.write(position++);
+   delay(5);
+     Serial.print("Setting: ");  
+     Serial.println(setting);
+     Serial.print("Position: ");
+     Serial.println(position);
+   }
+   
+if(position > setting){
+   servoA.attach(servoPin);
+   servoA.write(position--);
+   delay(5);
+     Serial.print("Setting: ");  
+     Serial.println(setting);
+     Serial.print("Position: ");
+     Serial.println(position);
+   }
+  
+if(position == setting){
+  servoA.detach();
+  }
+server.handleClient();
+MDNS.update();
+}
